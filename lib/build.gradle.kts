@@ -26,6 +26,7 @@ import groovy.util.Node
 import groovy.xml.XmlParser
 import org.gradle.configurationcache.extensions.capitalized
 import org.codehaus.groovy.runtime.ProcessGroovyMethods
+import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 import org.jetbrains.kotlin.incremental.createDirectory
 import java.text.DecimalFormat
 import java.math.RoundingMode
@@ -150,7 +151,7 @@ tasks.register("copyLatestVersionDocs") {
 tasks.getByName("dokkaHtml").finalizedBy("copyLatestVersionDocs")
 
 kotlin {
-    android {
+    androidTarget {
         publishLibraryVariants("release")
     }
 //    tasks.getByName("compileReleaseKotlinAndroid").dependsOn("kspCommonMainKotlinMetadata")
@@ -215,6 +216,9 @@ kotlin {
         binaries.executable()
     }
 
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs()
+
     sourceSets {
 
         /**
@@ -251,14 +255,14 @@ kotlin {
                 implementation(kotlin("test-common"))
                 implementation(kotlin("test-annotations-common"))
                 implementation(kmpLibs.test.kotlinx.coroutines.test)
-                implementation(kmpLibs.test.kotest.framework.engine)
-                implementation(kmpLibs.test.kotest.assertions.core)
+//                implementation(kmpLibs.test.kotest.framework.engine)
+//                implementation(kmpLibs.test.kotest.assertions.core)
 
                 // Ktor Server Mock
                 implementation(kmpLibs.test.ktor.client.mock)
 
                 implementation(kmpLibs.test.multiplatform.settings.test)
-                implementation(kmpLibs.test.turbine)
+//                implementation(kmpLibs.test.turbine)
             }
         }
         val jvmMain by getting {
@@ -527,73 +531,8 @@ fun download(url: String, path: String) {
     ant.invokeMethod("get", mapOf("src" to url, "dest" to destFile))
 }
 
+tasks.getByName("compileKotlinWasmJs")
+    .dependsOn("kspCommonMainKotlinMetadata")
 
-//////////////////// TODO remove this section with kotlin 1.9.0 ////////////////////
-tasks.getByName("signIosArm64Publication")
-    .dependsOn("publishAndroidReleasePublicationToMavenLocal")
-    .dependsOn("publishAndroidReleasePublicationToSonatypeRepository")
-
-tasks.getByName("jsNodeProductionLibraryPrepare").dependsOn("jsProductionExecutableCompileSync")
-tasks.getByName("jsBrowserProductionLibraryPrepare").dependsOn("jsProductionExecutableCompileSync")
-tasks.getByName("jsBrowserProductionWebpack").dependsOn("jsProductionLibraryCompileSync")
-
-tasks.getByName("signIosSimulatorArm64Publication")
-    .dependsOn("publishIosArm64PublicationToMavenLocal")
-    .dependsOn("publishIosArm64PublicationToSonatypeRepository")
-
-tasks.getByName("signIosX64Publication")
-    .dependsOn("publishIosArm64PublicationToMavenLocal")
-    .dependsOn("publishIosSimulatorArm64PublicationToMavenLocal")
-    .dependsOn("publishIosSimulatorArm64PublicationToSonatypeRepository")
-
-tasks.getByName("signJsPublication")
-    .dependsOn("publishIosArm64PublicationToMavenLocal")
-    .dependsOn("publishIosSimulatorArm64PublicationToMavenLocal")
-    .dependsOn("publishIosX64PublicationToMavenLocal")
-    .dependsOn("publishIosX64PublicationToSonatypeRepository")
-
-tasks.getByName("signJvmPublication")
-    .dependsOn("publishIosArm64PublicationToMavenLocal")
-    .dependsOn("publishIosSimulatorArm64PublicationToMavenLocal")
-    .dependsOn("publishIosX64PublicationToMavenLocal")
-    .dependsOn("publishJsPublicationToMavenLocal")
-    .dependsOn("publishJsPublicationToSonatypeRepository")
-
-tasks.getByName("signKotlinMultiplatformPublication")
-    .dependsOn("publishIosArm64PublicationToMavenLocal")
-    .dependsOn("publishIosSimulatorArm64PublicationToMavenLocal")
-    .dependsOn("publishIosX64PublicationToMavenLocal")
-    .dependsOn("publishJsPublicationToMavenLocal")
-    .dependsOn("publishJvmPublicationToMavenLocal")
-    .dependsOn("publishJvmPublicationToSonatypeRepository")
-
-//tasks.getByName("signWatchosArm32Publication")
-//    .dependsOn("publishIosSimulatorArm64PublicationToMavenLocal")
-//    .dependsOn("publishIosX64PublicationToMavenLocal")
-//    .dependsOn("publishJsPublicationToMavenLocal")
-//    .dependsOn("publishJvmPublicationToMavenLocal")
-//    .dependsOn("publishKotlinMultiplatformPublicationToMavenLocal")
-////    .dependsOn("publishJvmPublicationToSonatypeRepository")
-////    .dependsOn("publishKotlinMultiplatformPublicationToSonatypeRepository")
-//
-//tasks.getByName("signWatchosArm64Publication")
-//    .dependsOn("publishIosX64PublicationToMavenLocal")
-//    .dependsOn("publishJsPublicationToMavenLocal")
-//    .dependsOn("publishJvmPublicationToMavenLocal")
-//    .dependsOn("publishKotlinMultiplatformPublicationToMavenLocal")
-//    .dependsOn("publishWatchosArm32PublicationToMavenLocal")
-////    .dependsOn("publishJvmPublicationToSonatypeRepository")
-////    .dependsOn("publishWatchosArm32PublicationToSonatypeRepository")
-//
-//tasks.getByName("signWatchosSimulatorArm64Publication")
-//    .dependsOn("publishIosX64PublicationToMavenLocal")
-//    .dependsOn("publishJsPublicationToMavenLocal")
-//    .dependsOn("publishJvmPublicationToMavenLocal")
-//    .dependsOn("publishKotlinMultiplatformPublicationToMavenLocal")
-//    .dependsOn("publishWatchosArm32PublicationToMavenLocal")
-//    .dependsOn("publishWatchosArm64PublicationToMavenLocal")
-////    .dependsOn("publishJvmPublicationToSonatypeRepository")
-////    .dependsOn("publishWatchosArm32PublicationToSonatypeRepository")
-////    .dependsOn("publishWatchosArm64PublicationToSonatypeRepository")
-
-//////////////////////////////////////////////////////////////////////////////////////////
+tasks.getByName("wasmJsSourcesJar")
+    .dependsOn("kspCommonMainKotlinMetadata")
